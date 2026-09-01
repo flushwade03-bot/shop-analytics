@@ -1,23 +1,12 @@
 import fs from "node:fs/promises";
 import { getConfig } from "./config.js";
-import { etsyRequest } from "./etsy.js";
-import { readTokens } from "./token-store.js";
+import { etsyRequest, getOwnShop, getOwnShopId } from "./etsy.js";
 
 const config = getConfig();
 const [command, ...args] = process.argv.slice(2);
 
 function options(values) {
   return Object.fromEntries(values.filter((value) => value.startsWith("--") && value.includes("=")).map((value) => value.slice(2).split(/=(.*)/s, 2)));
-}
-
-async function ownShopId() {
-  if (/^\d+$/.test(config.shopId)) return config.shopId;
-  const tokens = await readTokens();
-  const userId = tokens?.access_token?.split(".", 1)[0] || process.env.ETSY_ACCESS_TOKEN?.split(".", 1)[0];
-  if (!/^\d+$/.test(userId || "")) throw new Error("ETSY_SHOP_IDを設定するか、OAuthアクセストークンを用意してください。");
-  const shop = await etsyRequest(config, `/v3/application/users/${userId}/shops`);
-  if (!shop?.shop_id) throw new Error("認証ユーザーのショップが見つかりません。");
-  return String(shop.shop_id);
 }
 
 function paging(values) {
@@ -29,7 +18,7 @@ async function salesSummary(values) {
   const parsed = options(values);
   const query = { limit: 100, offset: 0, min_created: parsed.min_created, max_created: parsed.max_created };
   const receipts = [];
-  const shopId = await ownShopId();
+  const shopId = await getOwnShopId(config);
   do {
     const page = await etsyRequest(config, `/v3/application/shops/${shopId}/receipts`, { query, authenticated: true });
     receipts.push(...(page.results || []));
@@ -60,15 +49,17 @@ async function main() {
   switch (command) {
     case "sales-summary":
       return salesSummary(args);
+    case "my-shop":
+      return getOwnShop(config);
     case "my-listings": {
       const query = { ...paging(args), state: options(args).state || "active" };
-      return etsyRequest(config, `/v3/application/shops/${await ownShopId()}/listings`, { query, authenticated: true });
+      return etsyRequest(config, `/v3/application/shops/${await getOwnShopId(config)}/listings`, { query, authenticated: true });
     }
     case "create-listing":
-      return etsyRequest(config, `/v3/application/shops/${await ownShopId()}/listings`, { method: "POST", body: await readJson(args[0]), authenticated: true });
+      return etsyRequest(config, `/v3/application/shops/${await getOwnShopId(config)}/listings`, { method: "POST", body: await readJson(args[0]), authenticated: true });
     case "update-listing": {
       if (!/^\d+$/.test(args[0] || "")) throw new Error("listing_idを数値で指定してください。");
-      return etsyRequest(config, `/v3/application/shops/${await ownShopId()}/listings/${args[0]}`, { method: "PATCH", body: await readJson(args[1]), authenticated: true });
+      return etsyRequest(config, `/v3/application/shops/${await getOwnShopId(config)}/listings/${args[0]}`, { method: "PATCH", body: await readJson(args[1]), authenticated: true });
     }
     case "public-shop": {
       if (!/^\d+$/.test(args[0] || "")) throw new Error("shop_idを数値で指定してください。");
@@ -81,7 +72,7 @@ async function main() {
     case "search":
       return etsyRequest(config, "/v3/application/listings/active", { query: { ...paging(args), keywords: options(args).keywords } });
     default:
-      throw new Error("Usage: sales-summary | my-listings | create-listing FILE | update-listing ID FILE | public-shop ID | public-listings ID | search --keywords=...");
+      throw new Error("Usage: my-shop | my-listings | sales-summary | create-listing FILE | update-listing ID FILE | public-shop ID | public-listings ID | search --keywords=...");
   }
 }
 
