@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Etsy OAuth Callback | shop-analytics</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, sans-serif;
+      }
+
+      body {
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        margin: 0;
+        min-height: 100vh;
+      }
+
+      main {
+        max-width: 36rem;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      p {
+        line-height: 1.7;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Etsy OAuth Callback</h1>
+      <p id="status">OAuth認証結果をローカルの shop-analytics に転送しています…</p>
+      <noscript>続行するにはJavaScriptを有効にしてください。</noscript>
+    </main>
+    <script>
+      const status = document.querySelector("#status");
+
+      if (location.search) {
+        const localCallback = new URL("http://localhost:3000/auth/etsy/callback");
+        localCallback.search = location.search;
+        location.replace(localCallback);
+      } else {
+        status.textContent = "このページはEtsy OAuth認証後のコールバック専用です。";
+      }
+    </script>
+  </body>
+</html>

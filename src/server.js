@@ -80,7 +80,7 @@ async function route(request, response) {
 
   if (request.method === "GET" && url.pathname === "/") return send(response, 200, { service: "shop-analytics", oauth: "/auth/etsy", status: "/auth/status" });
   if (request.method === "GET" && url.pathname === "/auth/etsy") return beginOAuth(response);
-  if (request.method === "GET" && url.pathname === callbackPath) return finishOAuth(url, response);
+  if (request.method === "GET" && [callbackPath, "/auth/etsy/callback"].includes(url.pathname)) return finishOAuth(url, response);
   if (request.method === "GET" && url.pathname === "/auth/status") {
     const tokens = await readTokens();
     return send(response, 200, { authenticated: Boolean(tokens), expiresAt: tokens?.expires_at ? new Date(tokens.expires_at).toISOString() : null, scopes: tokens?.scope || null });
