@@ -12,7 +12,7 @@ Etsy Open API v3 を使い、自分のショップの売上・リスティング
 ## 初期設定
 
 1. `.env.example` を参考に、Git管理外の `.env` を編集します。
-2. Etsy Developer Portalのアプリ設定にも、Callback URLとして `http://localhost:3000/auth/etsy/callback` を登録します。
+2. Etsy Developer Portalのアプリ設定にも、Callback URLとして `https://flushwade03-bot.github.io/shop-analytics/oauth-callback.html` を登録します。
 3. `npm start` を実行します。
 4. ブラウザで `http://localhost:3000/auth/etsy` を開き、自分のEtsyアカウントで許可します。
 5. 認証状態は `http://localhost:3000/auth/status` で確認できます。
@@ -62,7 +62,7 @@ Codexクラウド環境には、次の値を暗号化されたSecretsとして�
 
 環境変数には秘密ではない次の値を登録します。
 
-- `ETSY_REDIRECT_URI=http://localhost:3000/auth/etsy/callback`
+- `ETSY_REDIRECT_URI=https://flushwade03-bot.github.io/shop-analytics/oauth-callback.html`
 - `ETSY_TOKEN_SCOPE=transactions_r listings_r listings_w`
 
 Setup scriptには次を指定します。
@@ -84,3 +84,5 @@ npm run etsy -- search --keywords=wallet --limit=100
 ```
 
 作成・編集コマンドはEtsy上のデータを変更するため、`AGENTS.md` によりユーザーの明示的な依頼と内容確認を必須にしています。
+
+GitHub Pagesの `oauth-callback.html` は、Etsyから返されたOAuthパラメーターをローカルの `http://localhost:3000/auth/etsy/callback` へ転送します。OAuth認証時はローカルAPIを起動したままにしてください。
