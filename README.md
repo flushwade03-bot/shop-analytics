@@ -25,6 +25,7 @@ Etsy Open API v3 を使い、自分のショップの売上・リスティング
 
 ### 自分のショップ（OAuth必須）
 
+- `GET /api/me/shop` — 認証した自分のショップ情報
 - `GET /api/me/sales?limit=25&offset=0` — 売上レシート
 - `GET /api/me/listings?state=active` — 自分のリスティング（draft等も指定可能）
 - `POST /api/me/listings` — リスティングを作成
@@ -77,6 +78,7 @@ bash scripts/codex-setup.sh
 
 ```bash
 npm run etsy -- sales-summary
+npm run etsy -- my-shop
 npm run etsy -- my-listings --state=active --limit=100
 npm run etsy -- public-shop 12345678
 npm run etsy -- public-listings 12345678 --limit=100

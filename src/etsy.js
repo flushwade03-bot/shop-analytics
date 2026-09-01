@@ -48,6 +48,31 @@ async function validAccessToken(config) {
   return tokens.access_token;
 }
 
+export function userIdFromAccessToken(accessToken) {
+  const userId = accessToken?.split(".", 1)[0];
+  if (!/^\d+$/.test(userId || "")) {
+    throw Object.assign(new Error("OAuthアクセストークンからEtsyユーザーIDを確認できません。再認証してください。"), { status: 401 });
+  }
+  return userId;
+}
+
+export async function getOwnShop(config, { request = etsyRequest, getAccessToken = validAccessToken } = {}) {
+  if (/^\d+$/.test(config.shopId)) {
+    return request(config, `/v3/application/shops/${config.shopId}`, { authenticated: true });
+  }
+
+  const userId = userIdFromAccessToken(await getAccessToken(config));
+  return request(config, `/v3/application/users/${userId}/shops`, { authenticated: true });
+}
+
+export async function getOwnShopId(config, dependencies) {
+  const shop = await getOwnShop(config, dependencies);
+  if (!/^\d+$/.test(String(shop?.shop_id || ""))) {
+    throw Object.assign(new Error("認証したEtsyユーザーのショップが見つかりません。"), { status: 404 });
+  }
+  return String(shop.shop_id);
+}
+
 function formBody(values) {
   const result = new URLSearchParams();
   for (const [key, value] of Object.entries(values)) {
